@@ -1,21 +1,134 @@
 //************************************************
 //
-// Javascript Artificial Neural NETwork library     by Takashi Tanaka
+// neuron.js by Takashi Tanaka
 //
-//      dependency: jquery
+//      dependency: jquery, mt.js
 //
 //************************************************
 "use strict";
+//--------------------------------------------------------
+// Random Value generator
+//--------------------------------------------------------
+var mt = new MersenneTwister(1234);
 
-var mergeObj = function(obj1,obj2){
-    var obj3 = {};
-    for (var attrname in obj1) { obj3[attrname] = obj1[attrname]; }
-    for (var attrname in obj2) { obj3[attrname] = obj2[attrname]; }
-    return obj3;
+// Uniform distribution 一様分布ランダム値
+var getRandFuncUniform = function(min, max){
+    var range = max - min;
+    return function(){
+        return mt.next() * range + min;
+    }
+};
+
+// Triangular distribution 三角分布ランダム値
+var getRandFuncTriangular = function(min, max){
+    var range = max - min;
+    return function(){
+        return (mt.next() + mt.next()) * 0.5 * range + min;
+    }
+}
+
+//--------------------------------------------------------
+//Fire functions (from http://code.google.com/p/cuda-convnet/wiki/NeuronTypes)
+//--------------------------------------------------------
+var step = function(x){
+    return Math.min(1, Math.max(0, x<<3));
+};
+var logistic = function(x){
+    return 1 / (1 + Math.exp(-x));
+};
+var hyperbolicTangent  = function(x){
+    return a * rational_tanh(b * x);
+};
+var rectifiedLinear  = function(x){
+    return Math.max(0, x);
+};
+var boundedRectifiedLinear = function(x){
+    return Math.min(1, Math.max(0, x));
+};
+var softRectifiedLinear  = function(x){
+    return Math.ln(1 + Math.exp(x));
+};
+var absoluteValue  = function(x){
+    return Math.abs(x); 
+};
+var square  = function(x){
+    return x * x;
+};
+var squareRoot = function(x){
+    return Math.sqrt(x)
+};
+var linear = function(x){
+    return a * x + b;
+};
+//SoftSign
+var softSign = function(x){  //output -> [-1, 1]
+    return x / (1 + Math.abs(x))
+};
+var arcSoftSign = function(x){
+    return x / (1 - Math.abs(x))
+};
+//
+var softSign2 = function(x){  //output -> [0, 1]
+    return (x / (1 + Math.abs(x))) * 0.5 + 0.5
 };
 
 //--------------------------------------------------------
-var jneuron = function(){
+//Penalty functions (lesser is better)
+var penaltyLogistic = function(desired, x){
+    return -(desired * Math.log(x) + (1 - desired) * Math.log(1 - x));
+};
+
+var penaltyDiff = function(desired, x){
+    return Math.abs(desired - x);
+};
+
+
+//--------------------------------------------------------
+//与えられた多次元配列の各次元の長さを求める
+var getArraySize = function(argArray){
+    var dimension = [];
+    
+    //recursive
+    var rec = function(array){
+        if(Array.isArray(array)){
+            dimension.push(array.length);
+            rec(array[0]);
+        }else{
+            return;
+        }
+    }
+    
+    rec(argArray);
+    return dimension;
+};
+
+//--------------------------------------------------------
+//与えられた多次元配列の値の合計を求める
+var getArraySum = function(argArray){
+    //recursive
+    var rec = function(array){
+        var localSum = 0;
+        if(Array.isArray(array[0])){
+            for(var i = 0; i < array.length; i++){
+                localSum += rec(array[i]);
+            }
+        }else{
+            for(var i = 0; i < array.length; i++){
+                localSum += array[i];
+            }
+        }
+        return localSum;
+    }
+    
+    return rec(argArray);
+};
+
+
+
+//--------------------------------------------------------
+// Main
+//--------------------------------------------------------
+var Neuron = function(){
     var my = {
         neuronHash: {},  //all neuron hash (key: neuron id)
         groupHash: {},  //all neuron-group hash (key: group id)
@@ -55,7 +168,7 @@ var jneuron = function(){
             temprature: 1,
             historyCount: 50,
         };
-        neuron = mergeObj(neuron, argOptions);
+        neuron = $.extend(neuron, argOptions);
         
         //--------------------------------------------------------
         //Create connection to other neuron
@@ -159,7 +272,7 @@ var jneuron = function(){
             connectionW: null,
             connectionH: null,
         };
-        group = mergeObj(group, argOptions);
+        group = $.extend(group, argOptions);
         
         //--------------------------------------------------------
         //Apply some function to all neurons in group
@@ -312,7 +425,8 @@ var jneuron = function(){
                     for(var i = 0; i < count; i++){
                         var neuronId = group.id + ("000" + group.neuronCount).substr(-4);
                         pos.push(i);
-                        var copiedPos = mergeObj([], pos);  //
+                        var copiedPos = $.extend([], pos);
+                        
                         var neuron = my.createNeuron({
                             id: neuronId,
                             parent: group,

@@ -1,6 +1,6 @@
 //************************************************
-//
-//  Viewer
+//  Neuron.js 
+//    Weight and Firing Value Viewer
 //
 //************************************************
 "use strict";
@@ -26,12 +26,18 @@ var createGroupViewer = function(argOptions){
         //Weight View Container
         viewer.el["weightView"] = $("<div/>")
             .addClass("weight_viewer")
+            .css("float", "left")
+            .css("margin", 5)
             .appendTo(viewer.el["view_container"]);
         
         //label
+        var fromLayerNames = [];
+        $.each(viewer.group.from, function(name, val){
+            fromLayerNames.push(name);
+        });
         $("<div/>")
             .addClass("canvas_label")
-            .html("weight")
+            .html("weight (from " + fromLayerNames.join(", ") + ")")
             .appendTo(viewer.el["weightView"]);
         
         //Canvas
@@ -129,6 +135,8 @@ var createGroupViewer = function(argOptions){
         //Fire View Container
         viewer.el["fireView"] = $("<div/>")
             .addClass("fire_viewer")
+            .css("float", "left")
+            .css("margin", 5)
             .appendTo(viewer.el["view_container"]);
         
         //Label
@@ -227,7 +235,8 @@ var createGroupViewer = function(argOptions){
         //group properties (group name,...)
         $("<div/>")
             .addClass("group_name")
-            .html(viewer.group.id)
+            .html(viewer.group.id + " (" + viewer.group.counts.join(" x ") + ")")
+            .css("font-weight", "bold")
             .appendTo(viewer.el["container"]);
         
         //canvas area
@@ -235,13 +244,13 @@ var createGroupViewer = function(argOptions){
             .addClass("view_container")
             .appendTo(viewer.el["container"]);
             
-        if(viewer.fireView){
-            viewer.createFireView();
-            viewer.renderFire();
-        }
         if(viewer.weightView){
             viewer.createWeightView();
             viewer.renderWeight();
+        }
+        if(viewer.fireView){
+            viewer.createFireView();
+            viewer.renderFire();
         }
     };
     
