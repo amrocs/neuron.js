@@ -4,6 +4,7 @@
 //
 //************************************************
 "use strict";
+
 //--------------------------------------------------------
 //Create Viewer For Group(Canvas, Labels, and so on) 
 var createGroupViewer = function(argOptions){
