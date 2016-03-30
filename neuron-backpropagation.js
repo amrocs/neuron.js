@@ -1,6 +1,6 @@
 //************************************************
 //
-// Methods of Fire and Learning.
+// Methods of Fire and Learning
 //
 //************************************************
 "use strict";
